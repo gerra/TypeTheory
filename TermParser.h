@@ -11,21 +11,21 @@ using namespace std;
 
 struct Term {
 private:
-    bool allVariablesWereComputed = false;
-    set<string> allVariables;
+    bool allTermVariablesWereComputed = false;
+    set<string> allTermVariables;
 public:
     string name;
 
     virtual string getAsString() = 0;
-    virtual set<string> _getAllVariables() = 0;
-    virtual bool variableOccurs(const string &name) = 0;
+    virtual set<string> _getAllTermVariables() = 0;
+    virtual bool TermVariableOccurs(const string &name) = 0;
 
-    set<string> getAllVariables() {
-        if (!allVariablesWereComputed) {
-            allVariablesWereComputed = true;
-            allVariables = _getAllVariables();
+    set<string> getAllTermVariables() {
+        if (!allTermVariablesWereComputed) {
+            allTermVariablesWereComputed = true;
+            allTermVariables = _getAllTermVariables();
         }
-        return allVariables;
+        return allTermVariables;
     }
 };
 
@@ -52,25 +52,25 @@ struct Function : Term {
         return res;
     }
 
-    set<string> _getAllVariables() {
+    set<string> _getAllTermVariables() {
         set<string> res;
         for (auto arg : args) {
-            set<string> argVariables = arg->getAllVariables();
-            res.insert(argVariables.begin(), argVariables.end());
+            set<string> argTermVariables = arg->getAllTermVariables();
+            res.insert(argTermVariables.begin(), argTermVariables.end());
         }
         return res;
     }
 
-    bool variableOccurs(const string &name) {
+    bool TermVariableOccurs(const string &name) {
         for (auto arg : args) {
-            if (arg->variableOccurs(name)) return true;
+            if (arg->TermVariableOccurs(name)) return true;
         }
         return false;
     }
 };
 
-struct Variable : Term {
-    Variable(const string &s) {
+struct TermVariable : Term {
+    TermVariable(const string &s) {
         name = s;
     }
 
@@ -78,13 +78,13 @@ struct Variable : Term {
         return name;
     }
 
-    set<string> _getAllVariables() {
+    set<string> _getAllTermVariables() {
         set<string> res;
         res.insert(name);
         return res;
     }
 
-    bool variableOccurs(const string &name) {
+    bool TermVariableOccurs(const string &name) {
         return name == this->name;
     }
 };
@@ -98,9 +98,9 @@ struct Equation {
         return left->getAsString() + " = " + right->getAsString();
     }
 
-    set<string> getAllVariables() {
-        set<string> res = left->getAllVariables();
-        set<string> rr = right->getAllVariables();
+    set<string> getAllTermVariables() {
+        set<string> res = left->getAllTermVariables();
+        set<string> rr = right->getAllTermVariables();
         res.insert(rr.begin(), rr.end());
         return res;
     }
@@ -139,7 +139,7 @@ Term *parseTerm(const string &s, int &pos) {
         }
         return f;
     } else {
-        return new Variable(termName);
+        return new TermVariable(termName);
     }
 }
 
@@ -162,9 +162,9 @@ bool checkTermsAreEqual(Term *a, Term *b) {
     if (!a || !b) return false;
     if (a == b) return true;
     if (typeid(*a) != typeid(*b)) return false;
-    if (typeid(*a) == typeid(Variable)) {
-        Variable *aa = static_cast<Variable *>(a);
-        Variable *bb = static_cast<Variable *>(b);
+    if (typeid(*a) == typeid(TermVariable)) {
+        TermVariable *aa = static_cast<TermVariable *>(a);
+        TermVariable *bb = static_cast<TermVariable *>(b);
         return aa->name == bb->name;
     } else if (typeid(*a) == typeid(Function)) {
         Function *aa = static_cast<Function *>(a);

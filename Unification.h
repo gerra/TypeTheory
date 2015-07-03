@@ -15,8 +15,8 @@ struct UnifyException {
 
 
 void makeGeneral(Term *&term, map<string, Term *> &res) {
-    if (typeid(*term) == typeid(Variable)) {
-        Variable *var = static_cast<Variable *>(term);
+    if (typeid(*term) == typeid(TermVariable)) {
+        TermVariable *var = static_cast<TermVariable *>(term);
         term = res[var->name];
     } else if (typeid(*term) == typeid(Function)) {
         Function *f = static_cast<Function *>(term);
@@ -35,15 +35,15 @@ void substituteInRes(map<string, Term *> &res) {
 void unify(Term *s, Term *t, map<string, Term *> &res) {
     makeGeneral(s, res);
     makeGeneral(t, res);
-    if (typeid(*s) == typeid(Variable)) {
-        Variable *ss = static_cast<Variable *>(s);
+    if (typeid(*s) == typeid(TermVariable)) {
+        TermVariable *ss = static_cast<TermVariable *>(s);
         s = res[ss->name];
     }
-    if (typeid(*t) == typeid(Variable)) {
-        Variable *tt = static_cast<Variable *>(t);
+    if (typeid(*t) == typeid(TermVariable)) {
+        TermVariable *tt = static_cast<TermVariable *>(t);
         t = res[tt->name];
     }
-    if (typeid(*s) == typeid(Variable) && checkTermsAreEqual(s, t)) return;
+    if (typeid(*s) == typeid(TermVariable) && checkTermsAreEqual(s, t)) return;
     if (typeid(*s) == typeid(Function) && typeid(*t) == typeid(Function)) {
         Function *ss = static_cast<Function *>(s);
         Function *tt = static_cast<Function *>(t);
@@ -56,12 +56,12 @@ void unify(Term *s, Term *t, map<string, Term *> &res) {
                                     + ss->name + "(" + to_string(ss->args.size()) + " args) != "
                                     + tt->name + "(" + to_string(tt->args.size()) + " args)");
         }
-    } else if (typeid(*s) != typeid(Variable)) {
+    } else if (typeid(*s) != typeid(TermVariable)) {
         unify(t, s, res);
     } else {
-        Variable *ss = static_cast<Variable *>(s);
-        if (t->variableOccurs(ss->name)) {
-            throw UnifyException("There are no solution: variable "
+        TermVariable *ss = static_cast<TermVariable *>(s);
+        if (t->TermVariableOccurs(ss->name)) {
+            throw UnifyException("There are no solution: TermVariable "
                                     + ss->name + " occurs in " + t->getAsString());
         } else {
             res[ss->name] = t;
@@ -73,10 +73,10 @@ void unify(Term *s, Term *t, map<string, Term *> &res) {
 map<string, Term *> solve(vector<Equation> equations) {
     map<string, Term *> res;
     for (auto &equation : equations) {
-        set<string> equationVariables = equation.getAllVariables();
-        for (auto &var : equationVariables) {
+        set<string> equationTermVariables = equation.getAllTermVariables();
+        for (auto &var : equationTermVariables) {
             if (res.find(var) == res.end()) {
-                res[var] = new Variable(var);
+                res[var] = new TermVariable(var);
             }
         }
     }
@@ -88,8 +88,8 @@ map<string, Term *> solve(vector<Equation> equations) {
     // delete id substitution (like "x = x")
     set<string> ids;
     for (auto &it : res) {
-        if (typeid(*(it.second)) == typeid(Variable)) {
-            Variable *var = static_cast<Variable *>(it.second);
+        if (typeid(*(it.second)) == typeid(TermVariable)) {
+            TermVariable *var = static_cast<TermVariable *>(it.second);
             if (var->name == it.first) {
                 ids.insert(it.first);
             }
