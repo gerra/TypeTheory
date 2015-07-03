@@ -9,15 +9,14 @@
 using namespace std;
 
 int main() {
-    string s = "x";
-    string t = "z";
     try {
+        ifstream cin("task5.in");
+        ofstream cout("task5.out");
         string s;
         vector<Equation> equations;
         while (getline(cin, s)) {
             equations.push_back(parseEquation(s));
         }
-
         try {
             map<string, Term *> solution = solve(equations);
             for (auto &it : solution) {
@@ -29,7 +28,7 @@ int main() {
             cerr << e.msg << "\n";
         }
     } catch (char const *c) {
-        cout << c << "\n";
+        cerr << c << "\n";
     }
     return 0;
 }

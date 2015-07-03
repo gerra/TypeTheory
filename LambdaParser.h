@@ -29,6 +29,7 @@ public:
         return false;
     }
     virtual set<string> _getEmptyVars() = 0;
+    virtual set<string> getAllVars() = 0;
 
     set<string> getEmptyVars() {
         if (!emptyVarsWereComputed) {
@@ -45,6 +46,11 @@ public:
         }
         return nodeHash;
     }
+
+    bool hasVar(const string &name) {
+        set<string> allVars = getAllVars();
+        return allVars.find(name) != allVars.end();
+    }
 };
 
 struct Variable : Node {
@@ -60,6 +66,12 @@ struct Variable : Node {
     }
 
     set<string> _getEmptyVars() {
+        set<string> res;
+        res.insert(name);
+        return res;
+    }
+
+    set<string> getAllVars() {
         set<string> res;
         res.insert(name);
         return res;
@@ -87,6 +99,12 @@ struct Lambda : Node {
     set<string> _getEmptyVars() {
         set<string> res = v->getEmptyVars();
         res.erase(var->name);
+        return res;
+    }
+
+    set<string> getAllVars() {
+        set<string> res = v->getAllVars();
+        res.insert(var->name);
         return res;
     }
 };
@@ -123,6 +141,13 @@ struct Apply : Node {
         set<string> ll = l->getEmptyVars();
         set<string> res = r->getEmptyVars();
         res.insert(ll.begin(), ll.end());
+        return res;
+    }
+
+    set<string> getAllVars() {
+        set<string> res = l->getAllVars();
+        set<string> rr = r->getAllVars();
+        res.insert(rr.begin(), rr.end());
         return res;
     }
 };
