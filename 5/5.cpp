@@ -26,6 +26,7 @@ int main() {
             cerr << e << "\n";
         } catch (UnifyException &e) {
             cerr << e.msg << "\n";
+            cout << "Система неразрешима\n";
         }
     } catch (char const *c) {
         cerr << c << "\n";

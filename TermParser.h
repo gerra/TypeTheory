@@ -14,6 +14,8 @@ private:
     bool allVariablesWereComputed = false;
     set<string> allVariables;
 public:
+    string name;
+
     virtual string getAsString() = 0;
     virtual set<string> _getAllVariables() = 0;
     virtual bool variableOccurs(const string &name) = 0;
@@ -28,10 +30,11 @@ public:
 };
 
 struct Function : Term {
-    string name;
     vector<Term *> args;
 
-    Function(const string &name) : name(name) {}
+    Function(const string &s) {
+        name = s;
+    }
 
     void addArg(Term *arg) {
         args.push_back(arg);
@@ -41,11 +44,9 @@ struct Function : Term {
         string res = "";
         res += name;
         res += "(";
-        for (Term *arg : args) {
-            res += arg->getAsString();
-            if (arg != args.back()) {
-                res += ", ";
-            }
+        for (int i = 0; i < args.size(); i++) {
+            res += args[i]->getAsString();
+            if (i != args.size() - 1) res += ", ";
         }
         res += ")";
         return res;
@@ -69,9 +70,9 @@ struct Function : Term {
 };
 
 struct Variable : Term {
-    string name;
-
-    Variable(const string &name) : name(name) {}
+    Variable(const string &s) {
+        name = s;
+    }
 
     string getAsString() {
         return name;

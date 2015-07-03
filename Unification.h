@@ -13,7 +13,28 @@ struct UnifyException {
     UnifyException(const string &msg) : msg(msg) {}
 };
 
+
+void makeGeneral(Term *&term, map<string, Term *> &res) {
+    if (typeid(*term) == typeid(Variable)) {
+        Variable *var = static_cast<Variable *>(term);
+        term = res[var->name];
+    } else if (typeid(*term) == typeid(Function)) {
+        Function *f = static_cast<Function *>(term);
+        for (auto &arg : f->args) {
+            makeGeneral(arg, res);
+        }
+    }
+}
+
+void substituteInRes(map<string, Term *> &res) {
+    for (auto &it : res) {
+        makeGeneral(it.second, res);
+    }
+}
+
 void unify(Term *s, Term *t, map<string, Term *> &res) {
+    makeGeneral(s, res);
+    makeGeneral(t, res);
     if (typeid(*s) == typeid(Variable)) {
         Variable *ss = static_cast<Variable *>(s);
         s = res[ss->name];
@@ -39,26 +60,14 @@ void unify(Term *s, Term *t, map<string, Term *> &res) {
         unify(t, s, res);
     } else {
         Variable *ss = static_cast<Variable *>(s);
-        Function *tt = static_cast<Function *>(t);
-        if (tt->variableOccurs(ss->name)) {
+        if (t->variableOccurs(ss->name)) {
             throw UnifyException("There are no solution: variable "
-                                    + ss->name + " occurs in " + tt->getAsString());
+                                    + ss->name + " occurs in " + t->getAsString());
         } else {
-            res[ss->name] = tt;
+            res[ss->name] = t;
         }
     }
-}
-
-void makeGeneral(Term *&term, map<string, Term *> res) {
-    if (typeid(*term) == typeid(Variable)) {
-        Variable *var = static_cast<Variable *>(term);
-        term = res[var->name];
-    } else if (typeid(*term) == typeid(Function)) {
-        Function *f = static_cast<Function *>(term);
-        for (auto &arg : f->args) {
-            makeGeneral(arg, res);
-        }
-    }
+    substituteInRes(res);
 }
 
 map<string, Term *> solve(vector<Equation> equations) {
@@ -74,9 +83,7 @@ map<string, Term *> solve(vector<Equation> equations) {
     for (auto &equation : equations) {
         unify(equation.left, equation.right, res);
     }
-    for (auto &it : res) {
-        makeGeneral(it.second, res);
-    }
+    substituteInRes(res);
 
     // delete id substitution (like "x = x")
     set<string> ids;
