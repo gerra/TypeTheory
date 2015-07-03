@@ -5,29 +5,22 @@
 #include <cctype>
 #include <map>
 #include <set>
+#include "Utils.h"
+#include <typeinfo>
+#include <functional>
 
 using namespace std;
 
-string getStringWithoutSpaces(const string &s) {
-    string res = "";
-    unsigned int i = 0;
-    while (i < s.length() && isspace(s[i])) i++;
-    for (; i < s.length(); i++) {
-        char c = s[i];
-        if (!isspace(c) || !isspace(res[res.length() - 1])) {
-            res += c;
-        }
-    }
-    return res;
-}
-
-void skipSpaces(const string &s, int &pos) {
-    while (pos < s.length() && isspace(s[pos])) pos++;
-}
-
-
 struct Node {
-    long long hash;
+private:
+    size_t nodeHash = 0;
+    bool hashWasComputed = false;
+
+    set<string> emptyVars;
+    bool emptyVarsWereComputed = false;
+public:
+
+
     virtual void print() {
         cout << getAsString();
     }
@@ -35,16 +28,28 @@ struct Node {
     virtual bool isAtom() {
         return false;
     }
-    virtual string getClass() = 0;
+    virtual set<string> _getEmptyVars() = 0;
+
+    set<string> getEmptyVars() {
+        if (!emptyVarsWereComputed) {
+            emptyVarsWereComputed = true;
+            emptyVars =     _getEmptyVars();
+        }
+        return emptyVars;
+    }
+
+    size_t getHash() {
+        if (!hashWasComputed) {
+            hashWasComputed = true;
+            nodeHash = hash<string>()(getAsString());
+        }
+        return nodeHash;
+    }
 };
 
 struct Variable : Node {
     string name;
-    Variable(const string &name) : name(name) {
-        for (char c : name) {
-            hash = hash * 31 + c;
-        }
-    }
+    Variable(const string &name) : name(name) {}
 
     string getAsString() {
         return name;
@@ -54,8 +59,10 @@ struct Variable : Node {
         return true;
     }
 
-    string getClass() {
-        return "Variable";
+    set<string> _getEmptyVars() {
+        set<string> res;
+        res.insert(name);
+        return res;
     }
 };
 
@@ -63,9 +70,7 @@ struct Lambda : Node {
     Variable *var;
     Node *v;
     Lambda() : var(NULL), v(NULL) {}
-    Lambda(Variable *var, Node *v) : var(var), v(v) {
-        hash = (var->hash * 31) ^ (v->hash * 43);
-    }
+    Lambda(Variable *var, Node *v) : var(var), v(v) {}
 
     string getAsString() {
         string res = "";
@@ -79,17 +84,17 @@ struct Lambda : Node {
         return res;
     }
 
-    string getClass() {
-        return "Lambda";
+    set<string> _getEmptyVars() {
+        set<string> res = v->getEmptyVars();
+        res.erase(var->name);
+        return res;
     }
 };
 
 struct Apply : Node {
     Node *l, *r;
     Apply() : l(NULL), r(NULL) {}
-    Apply(Node *l, Node *r) : l(l), r(r) {
-        hash = (l->hash * 59) & (r->hash * 73);
-    }
+    Apply(Node *l, Node *r) : l(l), r(r) {}
 
     string getAsString() {
         string res = "";
@@ -114,8 +119,11 @@ struct Apply : Node {
         return false;
     }
 
-    string getClass() {
-        return "Apply";
+    set<string> _getEmptyVars() {
+        set<string> ll = l->getEmptyVars();
+        set<string> res = r->getEmptyVars();
+        res.insert(ll.begin(), ll.end());
+        return res;
     }
 };
 
@@ -202,20 +210,22 @@ bool checkNodesAreEqual(Node *a, Node *b) {
     if (!a && !b) return true;
     if (!a || !b) return false;
     if (a == b) return true;
-    if (a->hash != b->hash) return false;
-    if (a->getClass() != b->getClass()) return false;
-    if (a->getClass() == "Variable") {
+    if (a->getHash() != b->getHash()) return false;
+    if (typeid(*a) != typeid(*b)) return false;
+    if (typeid(*a) == typeid(Variable)) {
         auto *aa = static_cast<Variable *>(a);
         auto *bb = static_cast<Variable *>(b);
         return aa->name == bb->name;
-    } else if (a->getClass() == "Lambda") {
+    } else if (typeid(*a) == typeid(Lambda)) {
         auto *aa = static_cast<Lambda *>(a);
         auto *bb = static_cast<Lambda *>(b);
         return aa->var->name == bb->var->name && checkNodesAreEqual(aa->v, bb->v);
-    } else if (a->getClass() == "Variable") {
+    } else if (typeid(*a) == typeid(Apply)) {
         auto *aa = static_cast<Apply *>(a);
         auto *bb = static_cast<Apply *>(b);
         return checkNodesAreEqual(aa->l, bb->l) && checkNodesAreEqual(aa->r, bb->r);
+    } else {
+        throw "Unknown type";
     }
 }
 
