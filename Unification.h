@@ -70,7 +70,7 @@ void unify(Term *s, Term *t, map<string, Term *> &res) {
     substituteInRes(res);
 }
 
-map<string, Term *> solve(vector<Equation> equations) {
+map<string, Term *> solve(vector<Equation> &equations) {
     map<string, Term *> res;
     for (auto &equation : equations) {
         set<string> equationTermVariables = equation.getAllTermVariables();
