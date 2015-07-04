@@ -28,6 +28,9 @@ int main() {
         //cout << v->getAsString() << "\n";
     } catch (const char *e) {
         cout << e << "\n";
-    }
+    } catch (UnifyException &e) {
+		cout << "Выражение не имеет типа\n";
+		cerr << e.msg << "\n";
+	}
     return 0;
 }
