@@ -20,12 +20,13 @@ void getTypes(Node *v, map<string, Term *> &types, vector<Equation> &equations) 
         Variable *vv = static_cast<Variable *>(v);
         if (types.find(vv->getAsString()) == types.end()) {
             types[vv->getAsString()] = new TermVariable(getNewVariable());
+            equations.push_back(Equation(new TermVariable(vv->name), types[vv->getAsString()]));
         }
     } else if (typeid(*v) == typeid(Apply)) {
         Apply *vv = static_cast<Apply *>(v);
 
-        getTypes(vv->l, types, equations);
         getTypes(vv->r, types, equations);
+        getTypes(vv->l, types, equations);
 
         TermVariable *newVar = new TermVariable(getNewVariable());
         Function *arrow = new Function("f");
@@ -38,18 +39,28 @@ void getTypes(Node *v, map<string, Term *> &types, vector<Equation> &equations) 
     } else if (typeid(*v) == typeid(Lambda)) {
         Lambda *vv = static_cast<Lambda *>(v);
 
-        getTypes(vv->var, types, equations);
+        Term *prev = NULL;
+        if (types.find(vv->var->name) != types.end()) {
+            prev = types[vv->var->name];
+        }
+        //getTypes(vv->var, types, equations);
+        types[vv->var->name] = new TermVariable(getNewVariable());
         getTypes(vv->v, types, equations);
 
         Function *arrow = new Function("f");
         arrow->addArg(types[vv->var->getAsString()]);
         arrow->addArg(types[vv->v->getAsString()]);
-        // arrow = varType -> vType or f(varType, vType)
 
         types[vv->getAsString()] = arrow;
 
         TermVariable *newVar = new TermVariable(getNewVariable());
         equations.push_back(Equation(newVar, arrow));
+
+        if (prev) {
+            types[vv->var->name] = prev;
+        } else {
+            types.erase(vv->var->name);
+        }
     }
 }
 
@@ -71,6 +82,9 @@ map<string, Term *> getTypes(Node *v) {
     map<string, Term *> types;
     vector<Equation> equations;
     getTypes(v, types, equations);
+    //for (auto &eq : equations) {
+    //    cout << eq.left->getAsString() << " = " << eq.right->getAsString() << "\n";
+    //}
     map<string, Term *> shortTypes = solve(equations);
     for (auto &it : types) {
         simplify(it.second, types, shortTypes);

@@ -17,15 +17,10 @@ int main() {
 
         cout << toArrow(types[v->getAsString()]) << "\n\n";
         for (auto &it : v->getAllVars()) {
-            cout << it << ": " << toArrow(types[it]) << "\n";
+            if (types.find(it) != types.end()) {
+                cout << it << ": " << toArrow(types[it]) << "\n";
+            }
         }
-        //cout << types[v->getAsString()]->getAsString() << "\n";
-        //map<string, Term *> solution = solve(equations);
-        //cout << types[v->getAsString()]->getAsString() << "\n\n";
-        //for (auto &it : types) {
-        //    cout << it.first << " = " << it.second->getAsString() << "\n";
-        //}
-        //cout << v->getAsString() << "\n";
     } catch (const char *e) {
         cout << e << "\n";
     } catch (UnifyException &e) {
