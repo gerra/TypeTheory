@@ -15,27 +15,29 @@ string getNewVariable() {
     return "t" + to_string(varCount++);
 }
 
-void getTypes(Node *v, map<string, Term *> &types, vector<Equation> &equations) {
+Term *getTypes(Node *v, map<string, Term *> &types, vector<Equation> &equations) {
     if (typeid(*v) == typeid(Variable)) {
         Variable *vv = static_cast<Variable *>(v);
         if (types.find(vv->getAsString()) == types.end()) {
-            types[vv->getAsString()] = new TermVariable(getNewVariable());
-            equations.push_back(Equation(new TermVariable(vv->name), types[vv->getAsString()]));
+            Term *curType = new TermVariable(getNewVariable());
+            types[vv->getAsString()] = curType;
+            equations.push_back(Equation(new TermVariable(vv->name), curType));
         }
     } else if (typeid(*v) == typeid(Apply)) {
         Apply *vv = static_cast<Apply *>(v);
 
-        getTypes(vv->r, types, equations);
-        getTypes(vv->l, types, equations);
+        Term *leftType = getTypes(vv->l, types, equations);
+        Term *rightType = getTypes(vv->r, types, equations);
 
         TermVariable *newVar = new TermVariable(getNewVariable());
         Function *arrow = new Function("f");
-        arrow->addArg(types[vv->r->getAsString()]);
+        //arrow->addArg(types[vv->r->getAsString()]);
+        arrow->addArg(rightType);
         arrow->addArg(newVar);
 
         types[vv->getAsString()] = newVar;
-        equations.push_back(Equation(types[vv->l->getAsString()], arrow));
-
+        //equations.push_back(Equation(types[vv->l->getAsString()], arrow));
+        equations.push_back(Equation(leftType, arrow));
     } else if (typeid(*v) == typeid(Lambda)) {
         Lambda *vv = static_cast<Lambda *>(v);
 
@@ -45,11 +47,12 @@ void getTypes(Node *v, map<string, Term *> &types, vector<Equation> &equations) 
         }
         //getTypes(vv->var, types, equations);
         types[vv->var->name] = new TermVariable(getNewVariable());
-        getTypes(vv->v, types, equations);
+        Term *vType = getTypes(vv->v, types, equations);
 
         Function *arrow = new Function("f");
         arrow->addArg(types[vv->var->getAsString()]);
-        arrow->addArg(types[vv->v->getAsString()]);
+        //arrow->addArg(types[vv->v->getAsString()]);
+        arrow->addArg(vType);
 
         types[vv->getAsString()] = arrow;
 
@@ -62,6 +65,7 @@ void getTypes(Node *v, map<string, Term *> &types, vector<Equation> &equations) 
             types.erase(vv->var->name);
         }
     }
+    return types[v->getAsString()];
 }
 
 void simplify(Term *&v, map<string, Term *> &types, map<string, Term *> &shortTypes) {
