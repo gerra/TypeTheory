@@ -1,1 +1,1 @@
-\a.\b.a b c(\d.e \f.g) h
+(\x.\y.x) z ((\x.x x) (\x.x x))

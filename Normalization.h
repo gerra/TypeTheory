@@ -68,7 +68,7 @@ Node *softNormalize(Node *v) {
 //        cout << ">> " << v->getAsString() << " = " << cache_soft[v]->getAsString() << "\n";
         return cache_soft[v];
     }
-    cache_soft[v] = v;
+   // cache_soft[v] = v;
     if (typeid(*v) == typeid(Lambda)) {
         Lambda *vv = static_cast<Lambda *>(v);
         cache_soft[v] = new Lambda(vv->var, softNormalize(vv->v));
@@ -94,7 +94,7 @@ Node *normalize(Node *v) {
        // cout << v->getAsString() << " = " << cache[v]->getAsString() << "\n";
         return cache[v];
     }
-    cache[v] = v;
+   // cache[v] = v;
     if (typeid(*v) == typeid(Lambda)) {
         Lambda *vv = static_cast<Lambda *>(v);
         cache[v] = new Lambda(vv->var, normalize(vv->v));

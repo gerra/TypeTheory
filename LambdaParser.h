@@ -88,7 +88,7 @@ struct Lambda : Node {
         string res = "";
         res = "\\";
         res += var->getAsString();
-        res += " . ";
+        res += ". ";
         bool isAtom = v->isAtom();
         if (!isAtom) res += "(";
         res += v->getAsString();
@@ -235,8 +235,8 @@ bool checkNodesAreEqual(Node *a, Node *b) {
     if (!a && !b) return true;
     if (!a || !b) return false;
     if (a == b) return true;
-    if (a->getHash() != b->getHash()) return false;
     if (typeid(*a) != typeid(*b)) return false;
+    if (a->getHash() != b->getHash()) return false;
     if (typeid(*a) == typeid(Variable)) {
         auto *aa = static_cast<Variable *>(a);
         auto *bb = static_cast<Variable *>(b);
