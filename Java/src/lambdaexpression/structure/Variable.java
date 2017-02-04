@@ -1,6 +1,7 @@
 package lambdaexpression.structure;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -23,7 +24,7 @@ public class Variable extends Expression {
     }
 
     @Override
-    protected Expression normalizeInner() {
+    public Expression normalizeInner() {
         return this;
     }
 
@@ -33,26 +34,25 @@ public class Variable extends Expression {
     }
 
     @Override
-    protected Set<Variable> getFreeVariablesInner() {
-        Set<Variable> result = new HashSet<>();
-        result.add(this);
-        return result;
-    }
-
-    @Override
-    protected Expression substituteInner(Variable subVariable, Expression subExpression, boolean isFreeVariable) {
-        if (this.equals(subVariable) && isFreeVariable) {
-            return subExpression;
+    protected void getFreeVariablesInner(Map<Variable, Integer> counter, Set<Variable> answer) {
+        if (!counter.containsKey(this)) {
+            answer.add(this);
         }
-        return this;
     }
 
     @Override
-    protected Expression substituteNormalized(Variable subVariable, Expression subExpression) {
+    protected Expression substitute(Variable subVariable, Expression subExpression) {
         if (this.equals(subVariable)) {
             return subExpression;
         }
         return this;
+    }
+
+    @Override
+    protected Set<Variable> getFreeVariablesInnerLegacy() {
+        Set<Variable> res = new HashSet<>();
+        res.add(this);
+        return res;
     }
 
     @Override
@@ -66,8 +66,8 @@ public class Variable extends Expression {
 
     }
 
-//    @Override
-//    public int hashCode() {
-//        return name.hashCode();
-//    }
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
 }

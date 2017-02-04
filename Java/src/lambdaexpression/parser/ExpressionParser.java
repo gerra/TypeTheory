@@ -8,18 +8,18 @@ import lambdaexpression.structure.Variable;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static lambdaexpression.parser.LambdaExpressionLexer.TokenType.*;
+import static lambdaexpression.parser.ExpressionLexer.TokenType.*;
 
 /**
  * Created by root on 24.06.16.
  */
-public class LambdaExpressionParser implements AutoCloseable {
+public class ExpressionParser implements AutoCloseable {
 
-    private LambdaExpressionLexer lexer;
-    private LambdaExpressionLexer.Token token;
+    private ExpressionLexer lexer;
+    private ExpressionLexer.Token token;
 
     public Expression parse(InputStream is) throws IOException {
-        lexer = new LambdaExpressionLexer(is);
+        lexer = new ExpressionLexer(is);
         token = lexer.processNextToken();
         return parseExpression();
     }

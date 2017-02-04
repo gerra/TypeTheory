@@ -11,7 +11,7 @@ using namespace std;
 int main() {
     try {
         ifstream cin("task5.in");
-        ofstream cout("task5.out");
+        //ofstream cout("task5.out");
         string s;
         vector<Equation> equations;
         while (getline(cin, s)) {

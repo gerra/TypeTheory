@@ -1,5 +1,7 @@
 package lambdaexpression.structure;
 
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -27,72 +29,63 @@ public class Application extends Expression {
         return Expression.withBrackets(left) + " " + Expression.withBrackets(right);
     }
 
-    private Expression normalizeApplication() {
-        Expression leftNormalized = left.normalize();
-        if (leftNormalized instanceof Abstraction) {
-            Abstraction leftAbstraction = (Abstraction) leftNormalized;
-            Expression expressionBeforeSubstitution = leftAbstraction.getExpression();
-            Variable substitutionVariable = leftAbstraction.getVariable();
-            Expression expressionAfterSubstitution = expressionBeforeSubstitution
-                    .substituteNormalized(substitutionVariable, right);
-            return expressionAfterSubstitution.normalize();
-        } else {
-            return new Application(leftNormalized, right.normalize());
-        }
-    }
-
     private Expression normalizeApplication(boolean weakNormalize) {
+        Expression res;
         Expression leftWeakNormalized = left.weakNormalize();
         if (leftWeakNormalized instanceof Abstraction) {
             Abstraction leftAbstraction = (Abstraction) leftWeakNormalized;
             Variable subVariable = leftAbstraction.getVariable();
             Expression expression = leftAbstraction.getExpression();
-            Expression substitutedExpression = expression.substituteNormalized(subVariable, right);
+            Expression substitutedExpression = expression.substitute(subVariable, right);
             if (weakNormalize) {
-                return substitutedExpression.weakNormalize();
+                res = substitutedExpression.weakNormalize();
+//                saveWeak(res);
             } else {
-                return substitutedExpression.normalize();
+                res = substitutedExpression.normalize();
+//                save(res);
             }
         } else {
             if (weakNormalize) {
-                return new Application(leftWeakNormalized, right.weakNormalize());
+                res = new Application(leftWeakNormalized, right);
+//                saveWeak(res);
             } else {
-                return new Application(leftWeakNormalized.normalize(), right.normalize());
+                res = new Application(leftWeakNormalized.normalize(), right.normalize());
+//                save(res);
             }
         }
+        return res;
     }
 
     @Override
-    protected Expression normalizeInner() {
-//        return normalizeApplication(false);
-        return normalizeApplication();
+    public Expression normalizeInner() {
+        return normalizeApplication(false);
+//        return normalizeApplication();
     }
 
     @Override
     protected Expression weakNormalizeInner() {
-//        return normalizeApplication(true);
-        return normalizeApplication();
+        return normalizeApplication(true);
+//        return normalizeApplication();
     }
 
     @Override
-    protected Set<Variable> getFreeVariablesInner() {
-        Set<Variable> result = left.getFreeVariables();
-        result.addAll(right.getFreeVariables());
-        return result;
+    protected void getFreeVariablesInner(Map<Variable, Integer> counter, Set<Variable> answer) {
+        left.getFreeVariablesInner(counter, answer);
+        right.getFreeVariablesInner(counter, answer);
     }
 
     @Override
-    protected Expression substituteInner(Variable subVariable, Expression subExpression, boolean isFreeVariable) {
-        Expression newLeft = left.substituteInner(subVariable, subExpression, isFreeVariable);
-        Expression newRight = right.substituteInner(subVariable, subExpression, isFreeVariable);
+    protected Expression substitute(Variable subVariable, Expression subExpression) {
+        Expression newLeft = left.substitute(subVariable, subExpression);
+        Expression newRight = right.substitute(subVariable, subExpression);
         return new Application(newLeft, newRight);
     }
 
     @Override
-    protected Expression substituteNormalized(Variable subVariable, Expression subExpression) {
-        Expression newLeft = left.substituteNormalized(subVariable, subExpression);
-        Expression newRight = right.substituteNormalized(subVariable, subExpression);
-        return new Application(newLeft, newRight);
+    protected Set<Variable> getFreeVariablesInnerLegacy() {
+        Set<Variable> res = new HashSet<>(left.getFreeVariablesLegacy());
+        res.addAll(right.getFreeVariablesLegacy());
+        return res;
     }
 
     @Override
@@ -106,10 +99,10 @@ public class Application extends Expression {
 
     }
 
-//    @Override
-//    public int hashCode() {
-//        int result = left.hashCode();
-//        result = 31 * result + right.hashCode();
-//        return result;
-//    }
+    @Override
+    public int hashCode() {
+        int result = left.hashCode();
+        result = 31 * result + right.hashCode();
+        return result;
+    }
 }

@@ -7,7 +7,7 @@ import java.io.InputStream;
 /**
  * Created by root on 24.06.16.
  */
-public class LambdaExpressionLexer implements Closeable {
+public class ExpressionLexer implements Closeable {
     enum TokenType {
         LBRACKET(new char[] {'('}, "(", false),
         RBRACKET(new char[] {')'}, ")", false),
@@ -41,7 +41,7 @@ public class LambdaExpressionLexer implements Closeable {
     Token curToken;
     TokenType[] tokenTypes;
 
-    public LambdaExpressionLexer(InputStream is) throws IOException {
+    public ExpressionLexer(InputStream is) throws IOException {
         this.is = is;
         curPos = 0;
         this.tokenTypes = TokenType.values();

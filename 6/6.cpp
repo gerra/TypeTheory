@@ -9,7 +9,7 @@ using namespace std;
 int main() {
     try {
         ifstream cin("task6.in");
-        ofstream cout("task6.out");
+       // ofstream cout("task6.out");
         string s;
         getline(cin, s);
         Node *v = parseStringToFormula(s);

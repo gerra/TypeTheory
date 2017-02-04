@@ -1,66 +1,50 @@
 package lambdaexpression.structure;
 
-import java.io.ByteArrayInputStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Created by root on 24.06.16.
- */
 public abstract class Expression {
     private Set<Variable> freeVariables;
     protected static Map<Expression, Expression> cache = new HashMap<>();
     protected static Map<Expression, Expression> weakCache = new HashMap<>();
 
-    public Set<Variable> getFreeVariables() {
+    public final Set<Variable> getFreeVariables() {
         if (freeVariables == null) {
-            freeVariables = getFreeVariablesInner();
+            freeVariables = new HashSet<>();
+            getFreeVariablesInner(new HashMap<>(), freeVariables);
         }
         return freeVariables;
     }
 
-    public Expression substitute(String variableName, Expression expression) {
-        return substituteInner(new Variable(variableName), expression, true);
-    }
-
-    public Expression normalize() {
-//        try {
-            if (!cache.containsKey(this)) {
-                cache.put(this, this);
-                Expression normalized = normalizeInner();
-                cache.put(this, normalized);
-            }
-            return cache.get(this);
-//        } catch (StackOverflowError e) {
-//            System.out.println(this.toString());
-//            System.exit(1);
-//            return null;
-//        }
-//        return normalizeInner();
-    }
-
-    public Expression weakNormalize() {
-        try {
-            if (!weakCache.containsKey(this)) {
-                weakCache.put(this, this);
-                Expression weakNormalized = weakNormalizeInner();
-                weakCache.put(this, weakNormalized);
-            }
-            return weakCache.get(this);
-        } catch (StackOverflowError e) {
-            System.out.println(this.toString());
-            System.exit(1);
-            return null;
+    public final Set<Variable> getFreeVariablesLegacy() {
+        if (freeVariables == null) {
+            freeVariables = getFreeVariablesInnerLegacy();
         }
-//        return weakNormalizeInner();
+        return freeVariables;
+    }
+
+    public final Expression normalize() {
+        if (!cache.containsKey(this)) {
+            cache.put(this, normalizeInner());
+        }
+        return cache.get(this);
+    }
+
+    public final Expression weakNormalize() {
+        if (!weakCache.containsKey(this)) {
+            weakCache.put(this, weakNormalizeInner());
+        }
+        return weakCache.get(this);
     }
 
     protected abstract Expression normalizeInner();
     protected abstract Expression weakNormalizeInner();
-    protected abstract Set<Variable> getFreeVariablesInner();
-    protected abstract Expression substituteInner(Variable subVariable, Expression subExpression, boolean isFreeVariable);
-    protected abstract Expression substituteNormalized(Variable subVariable, Expression subExpression);
+    protected abstract void getFreeVariablesInner(Map<Variable, Integer> counter, Set<Variable> answer);
+    protected abstract Expression substitute(Variable subVariable, Expression expression);
+
+    protected abstract Set<Variable> getFreeVariablesInnerLegacy();
 
     public static String withBrackets(Expression expression) {
         if (expression instanceof Variable) {
